@@ -1,6 +1,5 @@
 # Chuck Norris Jokes CLI
-
-![Tests](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/MilesMob/Midterm/actions/workflows/tests.yml/badge.svg)](https://github.com/MilesMob/Midterm/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
