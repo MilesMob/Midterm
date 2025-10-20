@@ -1,76 +1,81 @@
 import argparse
 import sys
-from .api import fetch_random_joke, fetch_categories, search_jokes, APIError
+from . import api
+
+# --- CLI Command Handlers ---
 
 def handle_random(args):
-    """Handler for the 'random' command."""
-    joke = fetch_random_joke()
-    print(f"Random Joke:\n{joke}")
+    """Fetches and prints a random joke."""
+    joke = api.fetch_random_joke(args.category)
+    print("\n--- Chuck Says ---\n")
+    print(joke)
+    print("\n------------------\n")
+    # Gracefully exit if the result is an error message
+    if joke.startswith("Error:"):
+        sys.exit(1)
+
 
 def handle_categories(args):
-    """Handler for the 'categories' command."""
-    categories = fetch_categories()
-    print("Available Categories:")
-    print(", ".join(categories))
+    """Fetches and prints the list of joke categories."""
+    categories = api.fetch_categories()
+    if isinstance(categories, list):
+        print("\nAvailable Categories:\n")
+        print(" | ".join(categories))
+        print("\n")
+    else:
+        print(categories)
+        sys.exit(1)
+
 
 def handle_search(args):
-    """Handler for the 'search' command."""
-    jokes = search_jokes(args.query)
-    print(f"Found {len(jokes)} jokes for '{args.query}':")
-    for i, joke in enumerate(jokes, 1):
-        print(f"  {i}. {joke}")
+    """Searches for jokes based on a query."""
+    jokes = api.search_jokes(args.query)
+    if isinstance(jokes, list):
+        print(f"\n--- Found {len(jokes)} Joke(s) for '{args.query}' ---\n")
+        for i, joke in enumerate(jokes, 1):
+            print(f"[{i}] {joke}\n")
+        print("-------------------------------------------\n")
+    else:
+        print(jokes)
+        sys.exit(1)
+
+
+# --- Main CLI Setup ---
 
 def main():
-    """
-    Main entry point for the CLI application.
-    Sets up argument parsing and handles command execution.
-    """
+    """Sets up the argparse CLI and runs the application."""
     parser = argparse.ArgumentParser(
-        description="A Chuck Norris Jokes CLI tool."
-    )
-    subparsers = parser.add_subparsers(
-        dest='command', 
-        required=True, 
-        help='Available commands'
+        description="A command-line tool to fetch and search Chuck Norris Jokes."
     )
 
-    # Subcommand: random
-    parser_random = subparsers.add_parser(
-        'random', 
-        help='Get a random Chuck Norris joke.'
+    # Setup for subcommands (random, categories, search)
+    subparsers = parser.add_subparsers(dest="command", required=True, help="Available commands")
+
+    # 1. 'random' command
+    parser_random = subparsers.add_parser('random', help='Get a random Chuck Norris joke.')
+    parser_random.add_argument(
+        '-c', '--category', 
+        type=str, 
+        help='Optional category to fetch a joke from (e.g., "dev").'
     )
     parser_random.set_defaults(func=handle_random)
 
-    # Subcommand: categories
-    parser_categories = subparsers.add_parser(
-        'categories', 
-        help='List all available joke categories.'
-    )
+    # 2. 'categories' command
+    parser_categories = subparsers.add_parser('categories', help='List all available joke categories.')
     parser_categories.set_defaults(func=handle_categories)
 
-    # Subcommand: search
-    parser_search = subparsers.add_parser(
-        'search', 
-        help='Search for jokes by keyword.'
-    )
+    # 3. 'search' command
+    parser_search = subparsers.add_parser('search', help='Search for jokes by keyword.')
     parser_search.add_argument(
         'query', 
         type=str, 
-        help='The keyword to search for.'
+        help='The keyword to search for in jokes.'
     )
     parser_search.set_defaults(func=handle_search)
-    
-    args = parser.parse_args()
 
-    try:
-        # Call the appropriate handler function
-        args.func(args)
-    except APIError as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Parse arguments and call the corresponding handler function
+    args = parser.parse_args()
+    args.func(args)
 
 if __name__ == "__main__":
     main()
